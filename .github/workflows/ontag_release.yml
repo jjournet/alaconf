@@ -1,0 +1,41 @@
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+name: Create release
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Release ${{ github.ref }}
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            LICENSE
+            README.md
+  releases-matrix:
+    name: Release Go Binary
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # build and publish in parallel: linux/amd64, linux/arm64, windows/amd64, darwin/amd64, darwin/arm64
+        # comment Windows for now, as the program is not yet compatible with it yet
+        # goos: [linux, windows, darwin]
+        goos: [linux, darwin]
+        goarch: [amd64, arm64]
+        # exclude:
+        #   - goarch: arm64
+        #     goos: windows
+    steps:
+    - uses: actions/checkout@v3
+    - uses: wangyoucao577/go-release-action@v1.32
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        goos: ${{ matrix.goos }}
+        goarch: ${{ matrix.goarch }}
+        project_path: "./"
+        binary_name: "alaconf"
+        extra_files: LICENSE README.md
